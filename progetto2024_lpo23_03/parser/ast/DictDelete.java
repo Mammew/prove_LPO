@@ -2,19 +2,10 @@ package progetto2024_lpo23_03.parser.ast;
 
 import progetto2024_lpo23_03.visitors.Visitor;
 
-public class DictDelete implements Exp {
-    private final Exp dict;
-    private final Exp index;
+public class DictDelete extends DictBinOp {
 
-    public DictDelete(Exp dict, Exp index) {
-        this.dict = dict;
-        this.index = index;
-    }
-
-    // Implement methods here, e.g., toString, eval, etc.
-    @Override
-    public String toString() {
-        return String.format("%s[%s:]", dict, index);
+    public DictDelete(Exp exp, Exp key) {
+        super(exp,key);
     }
 
 	@Override

@@ -48,4 +48,12 @@ public interface Visitor<T> {
 	T visitFst(Exp exp);
 
 	T visitSnd(Exp exp);
+	/*
+	T dictUpdate(Exp key, Exp value);
+	
+	T dictAccess(Exp key);
+	
+	T dictDelete(Exp value);
+	
+	T dictInsert(Exp value);*/
 }

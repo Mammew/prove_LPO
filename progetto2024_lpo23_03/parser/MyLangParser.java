@@ -350,31 +350,29 @@ public class MyLangParser implements Parser {
 	// ci abbiamo ragionato ci sembra corretta
 
 	private Exp parseDict() throws ParserException {
-		Exp exp = parseAtom();  // Inizia con un'atom, poiché un dizionario potrebbe essere un atom stesso.
-	
-		while (tokenizer.tokenType() == OPEN_S_PAR) {  // Verifica se c'è un '[' dopo l'atom
-			consume(OPEN_S_PAR);  // Consuma '['
-			Exp index = parseExp();  // Parsing dell'espressione dell'indice
-			
-			if (tokenizer.tokenType() == DOUBLE_DOT) {  // Controlla se c'è ':' per set/delete
-				consume(DOUBLE_DOT);  // Consuma ':'
-				if (tokenizer.tokenType() == CLOSE_S_PAR) {  // Se c'è subito ']', è un delete
-					consume(CLOSE_S_PAR);  // Consuma ']'
-					exp = new DictDelete(exp, index);  // Cancellazione dell'elemento con l'indice specificato
-				} else {  // Altrimenti, è un set
-					Exp value = parseExp();  // Parsing del valore da impostare
-					consume(CLOSE_S_PAR);  // Consuma ']'
-					exp = new DictUpdate(exp, index, value);  // Aggiorna il dizionario con il nuovo valore
-				}
-			} else {  // Altrimenti, è un get
-				consume(CLOSE_S_PAR);  // Consuma ']'
-				exp = new DictAccess(exp, index);  // Accesso al dizionario con l'indice specificato
-			}
-		}
-	
-		return exp;  // Ritorna l'espressione risultante
-	}
+	    Exp exp = parseAtom();  // Parsing dell'espressione base (il dizionario su cui operare)
 
+	    consume(OPEN_S_PAR);  // Consuma '['
+	    Exp key = parseExp();  // Parsing della chiave o dell'indice
+
+	    if (tokenizer.tokenType() == DOUBLE_DOT) {  // Se è presente ':'
+	        consume(DOUBLE_DOT);  // Consuma ':'
+	        
+	        if (tokenizer.tokenType() == CLOSE_S_PAR) {  // Se dopo ':' c'è ']', è un'operazione di delete
+	            consume(CLOSE_S_PAR);  // Consuma ']'
+	            return new DictDelete(exp, key);  // Ritorna una nuova espressione di cancellazione
+	        } else {  // Altrimenti, è un'operazione di update
+	            Exp value = parseExp();  // Parsing del valore da aggiornare
+	            consume(CLOSE_S_PAR);  // Consuma ']'
+	            return new DictUpdate(exp, key, value);  // Ritorna una nuova espressione di aggiornamento
+	        }
+	    } else {  // Se non c'è ':', è un'operazione di accesso (get)
+	        consume(CLOSE_S_PAR);  // Consuma ']'
+	        return new DictAccess(exp, key);  // Ritorna una nuova espressione di accesso
+	    }
+	}
+	
+	
 	// parses number literals
 	private IntLiteral parseNum() throws ParserException {
 	    // completare
@@ -452,7 +450,6 @@ public class MyLangParser implements Parser {
 	}
 
 	/*
-	* 
 	* parses expressions delimited by parentheses Atom :: = '[' Exp ':' Exp ']'
 	*/
 	// non si dovrebbe trattare di aggiornamento ma dovrebbe essere il dizionario vero e proprio
@@ -460,23 +457,15 @@ public class MyLangParser implements Parser {
 	// gestiamo tutto in parsedict
 
 	private Exp parseSquarePar() throws ParserException {
-	    consume(OPEN_S_PAR);
-	    Exp key = parseExp();
-	    consume(DOUBLE_DOT);
-	    Exp value = parseExp();
-	    consume(CLOSE_S_PAR);
+	    consume(OPEN_S_PAR); // Consuma '['
+	    
+	    Exp key = parseExp();  // Parsing della chiave
+	    consume(DOUBLE_DOT);  // Consuma ':'
+	    Exp value = parseExp();  // Parsing del valore
+	    
+	    consume(CLOSE_S_PAR);  // Consuma ']'
 
-	    Exp dictionary = new DictLiteral(key, value); // Inizializza il dizionario con la prima coppia
-
-	    while (tokenizer.tokenType() == PAIR_OP) {
-	        consume(PAIR_OP);
-	        consume(OPEN_S_PAR);
-	        key = parseExp();
-	        consume(DOUBLE_DOT);
-	        value = parseExp();
-	        consume(CLOSE_S_PAR);
-	        dictionary = new DictInsert(dictionary, key, value); // Aggiunge nuove coppie al dizionario
-	    }
-	    return dictionary;
+	    // Ritorna una nuova espressione che rappresenta un dizionario con una sola coppia chiave-valore
+	    return new DictLiteral(key, value);
 	}
 }
